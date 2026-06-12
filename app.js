@@ -275,7 +275,7 @@ function L_split(s){
  const items=s.cards.map((c,i)=>`<div class="sl-item" style="animation-delay:${.3+i*.12}s"><span class="sl-ic">${svg(c.ic)}</span><div><div class="sl-t">${c.t}</div><ul>${li(c.items)}</ul></div></div>`).join('');
  return `<div class="wrap">${head(s)}${titleHTML(s)}${leadHTML(s)}${s.alert?alertHTML(s.alert):''}
   <div class="split"><div class="split-l"><div class="split-list">${items}</div></div>
-  <div class="split-r"><svg class="mesh" data-mesh viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg></div></div></div>${FOOT}`;
+  <div class="split-r"><div class="defense-viz"><svg class="dv-svg" viewBox="0 0 120 120" data-defense preserveAspectRatio="xMidYMid meet"></svg><div class="dv-label">PERIMETER DEFENCE · ACTIVE</div></div></div></div></div>${FOOT}`;
 }
 /* ---- ORBIT ---- */
 function L_orbit(s){
@@ -382,16 +382,32 @@ function render(){
 }
 render();
 
-/* mesh builder */
-function buildMesh(el){
- const N=9,nodes=[];for(let i=0;i<N;i++)nodes.push({x:12+Math.random()*76,y:12+Math.random()*76});
- nodes[0]={x:50,y:50};let s='';
- for(let i=1;i<N;i++){const d=Math.hypot(nodes[i].x-50,nodes[i].y-50);s+=`<line class="${d<40?'mf':'ml'}" x1="50" y1="50" x2="${nodes[i].x.toFixed(1)}" y2="${nodes[i].y.toFixed(1)}"/>`;}
- for(let i=1;i<N;i++)for(let j=i+1;j<N;j++){if(Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y)<26)s+=`<line class="ml" x1="${nodes[i].x.toFixed(1)}" y1="${nodes[i].y.toFixed(1)}" x2="${nodes[j].x.toFixed(1)}" y2="${nodes[j].y.toFixed(1)}"/>`;}
- nodes.forEach((n,i)=>{s+=`<circle class="mn ${i===0?'core':'pulse'}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${i===0?3.2:1.6}" style="animation-delay:${(i*0.3).toFixed(1)}s"/>`;});
- el.innerHTML=s;
+/* defence / threat-scan visual — a protected core, a rotating radar sweep,
+   scan pulses, and incoming threats that are stopped at the inner ring */
+function buildDefense(el){
+ const cx=60,cy=60,IN=24,OUT=50;
+ const angles=[-62,18,128,-150,72];           // fixed positions (deterministic, not random)
+ let threats='';
+ angles.forEach((deg,i)=>{
+  const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a),d=(i*.55).toFixed(2);
+  const xi=(cx+IN*c).toFixed(1),yi=(cy+IN*s).toFixed(1),xo=(cx+OUT*c).toFixed(1),yo=(cy+OUT*s).toFixed(1);
+  threats+=`<line class="dv-trail" x1="${xi}" y1="${yi}" x2="${xo}" y2="${yo}" style="animation-delay:${d}s"/>`+
+           `<circle class="dv-block" cx="${xi}" cy="${yi}" r="1.3" style="animation-delay:${d}s"/>`+
+           `<circle class="dv-threat" cx="${xo}" cy="${yo}" r="2.3" style="animation-delay:${d}s"/>`;
+ });
+ el.innerHTML=`
+  <circle class="dv-ring" cx="60" cy="60" r="52"/>
+  <circle class="dv-ring r2" cx="60" cy="60" r="38"/>
+  <circle class="dv-ring" cx="60" cy="60" r="24"/>
+  <line class="dv-axis" x1="60" y1="4" x2="60" y2="116"/>
+  <line class="dv-axis" x1="4" y1="60" x2="116" y2="60"/>
+  <circle class="dv-ping" cx="60" cy="60" r="24"/>
+  <g class="dv-sweep"><path class="dv-wedge" d="M60 60 L60 8 A52 52 0 0 0 27 21 Z"/><line class="dv-beam" x1="60" y1="60" x2="60" y2="8"/></g>
+  ${threats}
+  <circle class="dv-core-glow" cx="60" cy="60" r="15"/>
+  <path class="dv-shield" transform="translate(60 60) scale(.82) translate(-12 -12)" d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>`;
 }
-document.querySelectorAll('[data-mesh]').forEach(buildMesh);
+document.querySelectorAll('[data-defense]').forEach(buildDefense);
 
 /* counters / ticker / boot */
 function countUp(el){const t=parseFloat(el.dataset.count),suf=el.dataset.suffix||'';let v=0;const step=t/40;clearInterval(el._c);el._c=setInterval(()=>{v+=step;if(v>=t){v=t;clearInterval(el._c);}el.textContent=Math.round(v)+suf;},22);}
