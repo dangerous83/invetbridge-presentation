@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
 <title>ITSEC · Cyber Defence Briefing — Investbridge Capital</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -59,7 +59,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg-0);color:var(-
 .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:90px 5.5vw 86px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(26px) scale(.985);transition:opacity .6s var(--ease),transform .6s var(--ease)}
 .slide.active{opacity:1;visibility:visible;pointer-events:auto;transform:none}
 .slide.exit{transform:translateY(-26px) scale(.985)}
-.wrap{width:100%;max-width:1260px;margin:0 auto;position:relative}
+.wrap{width:100%;max-width:1260px;margin:0 auto;position:relative;zoom:var(--zoom,1)}
+/* Zoom / read mode: when text is enlarged, let the slide scroll instead of clipping */
+body.zoomed .wrap{max-height:100%;overflow-y:auto;overflow-x:hidden;padding-right:6px}
+.wrap::-webkit-scrollbar{width:7px;height:7px}
+.wrap::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:4px}
+.wrap::-webkit-scrollbar-track{background:transparent}
+#zoomBtn .zlvl{position:absolute;right:3px;bottom:2px;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:700;color:var(--cyan-2);display:none}
+#zoomBtn.on .zlvl{display:block}
+#zoomBtn.on{background:rgba(47,198,255,.15);border-color:var(--line-strong);color:#fff}
 
 .panel-head{display:flex;align-items:center;gap:14px;margin-bottom:14px;opacity:0}
 .slide.active .panel-head{animation:rise .6s var(--ease) .05s forwards}
@@ -167,7 +175,8 @@ h2.title{font-size:clamp(26px,4.1vw,48px);line-height:1.06;font-weight:800;lette
 .orbit-detail ul{list-style:none;display:flex;flex-direction:column;gap:10px}
 .orbit-detail li{display:flex;gap:11px;align-items:flex-start;font-size:15px;line-height:1.42}
 .orbit-detail li .mk{margin-top:6px}
-.od-empty{display:flex;align-items:center;gap:10px;color:var(--txt-dim);font-family:'JetBrains Mono',monospace;font-size:13px;height:100%}
+.od-empty{display:flex;align-items:center;gap:9px;color:var(--txt-dim);font-family:'JetBrains Mono',monospace;font-size:13px;min-height:120px}
+.od-empty svg{flex:0 0 auto;width:18px;height:18px;opacity:.75}
 
 /* ============ LAYOUT: STEPS ============ */
 .steps{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:18px;position:relative;margin-top:10px}
@@ -426,6 +435,14 @@ body.remote-mode #remote{display:flex}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);z-index:120;background:var(--panel-solid);border:1px solid var(--line-strong);padding:12px 20px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%)}
 @media(max-width:700px){.slide{padding:78px 20px 76px}.slide-foot{left:20px;right:20px}}
+/* Mobile landscape: short viewport — scroll from the top so content isn't cut off when the phone is rotated */
+@media(orientation:landscape) and (max-height:560px){
+  .slide{justify-content:flex-start;padding-top:70px;padding-bottom:60px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .wrap{max-height:none;overflow:visible}
+  .slide-foot{display:none}
+  .orbit{grid-template-columns:1fr 1fr;align-items:start}
+  .orbit-stage{max-width:300px}
+}
 </style>
 </head>
 <body>
@@ -441,6 +458,7 @@ body.remote-mode #remote{display:flex}
     <span class="live-chip"><i></i>SECURE SESSION</span>
     <span class="counter" id="counter"><b>01</b>/00</span>
     <div class="icon-btn" id="remoteBtn" title="Phone remote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2.5"/><line x1="11" y1="18" x2="13" y2="18"/></svg></div>
+    <div class="icon-btn" id="zoomBtn" title="Zoom text for readability (Z)" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4M11 8v6M8 11h6"/></svg><span class="zlvl"></span></div>
     <div class="icon-btn" id="fsBtn" title="Fullscreen (F)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4"/></svg></div>
   </div>
 </header>
