@@ -418,6 +418,14 @@ h2.title{font-size:clamp(26px,4.1vw,48px);line-height:1.06;font-weight:800;lette
 body.remote-mode{overflow:auto}
 body.remote-mode #stage,body.remote-mode #topbar,body.remote-mode #navbtns,body.remote-mode .navzone,body.remote-mode #progress{display:none!important}
 body.remote-mode #remote{display:flex}
+/* Phone in landscape mirrors the live desktop slide; portrait keeps the presenter console */
+body.remote-mode.rm-mirror{overflow:hidden}
+body.remote-mode.rm-mirror #remote,body.remote-mode.rm-mirror #topbar{display:none!important}
+body.remote-mode.rm-mirror #stage,body.remote-mode.rm-mirror #progress,body.remote-mode.rm-mirror .navzone{display:block!important}
+body.remote-mode.rm-mirror #navbtns{display:flex!important}
+.rm-rotate-hint{display:none;align-items:center;gap:8px;margin:0 18px 12px;padding:11px 14px;border-radius:12px;background:rgba(47,198,255,.08);border:1px solid var(--line-strong);color:var(--cyan-2);font-size:12.5px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+body.remote-mode:not(.rm-mirror) .rm-rotate-hint{display:flex}
+.rm-rotate-hint svg{width:18px;height:18px;flex:0 0 auto}
 .rm-top{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--line)}
 .rm-top img{height:22px}
 .rm-stat{display:flex;align-items:center;gap:8px;font-size:13px;font-family:'JetBrains Mono',monospace}
@@ -501,6 +509,7 @@ body.remote-mode #remote{display:flex}
 
 <div id="remote">
   <div class="rm-top"><img src="asset/ITSEC Horizontal White.png" alt="ITSEC"/><div class="rm-stat"><span class="status-dot" id="rmDot"></span><span id="rmStat">connecting</span></div></div>
+  <div class="rm-rotate-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg> Rotate to landscape to mirror the live slide</div>
   <div class="rm-body" id="rmBody">
     <div class="rm-connect-msg" id="rmConnect"><div class="spin"></div><h2 style="font-size:19px;margin-bottom:8px">Connecting to presentation…</h2><p style="color:var(--txt-soft);font-size:14px">Keep this tab open. The remote activates as soon as the link is established.</p></div>
     <div id="rmLive" style="display:none;flex-direction:column;gap:16px">

@@ -425,11 +425,14 @@ function go(i,opt){opt=opt||{};i=Math.max(0,Math.min(total-1,i));
  prevBtn.classList.toggle('disabled',i===0);nextBtn.classList.toggle('disabled',i===total-1);
  updateMenuCurrent();onEnter(slideEls[i]);if(opt.broadcast!==false)sendState();}
 function onEnter(el){el.querySelectorAll('.sv[data-count]').forEach(countUp);}
-const next=()=>go(cur+1),prev=()=>go(cur-1);
+/* on the phone, navigation drives the desktop (which mirrors back); on the desktop it moves locally */
+const next=()=>{if(isRemote){send({t:'nav',action:'next'});return;}go(cur+1);};
+const prev=()=>{if(isRemote){send({t:'nav',action:'prev'});return;}go(cur-1);};
 prevBtn.onclick=prev;nextBtn.onclick=next;
 document.getElementById('zoneL').onclick=prev;document.getElementById('zoneR').onclick=next;
 
 stage.addEventListener('click',e=>{
+ if(isRemote)return; /* phone mirrors the desktop — it doesn't drive content locally */
  const card=e.target.closest('[data-card]');if(card){revealCard(card);return;}
  const ra=e.target.closest('[data-revealall]');if(ra){slideEls[cur].querySelectorAll('.fcard:not(.revealed)').forEach((c,k)=>setTimeout(()=>revealCard(c),k*120));return;}
  const sat=e.target.closest('[data-sat]');if(sat){activateSat(slideEls[cur],parseInt(sat.dataset.sat,10));return;}
@@ -437,9 +440,12 @@ stage.addEventListener('click',e=>{
  const opt=e.target.closest('.opt');if(opt&&!opt.closest('.options').classList.contains('locked')){pollAnswer(slideEls[cur],parseInt(opt.dataset.opt,10),true);return;}
  const act=e.target.closest('[data-act]');if(act){act.dataset.act==='start'?next():openQR();}
 });
-function revealCard(c){if(c.classList.contains('revealed'))return;c.classList.add('revealed');}
-function doReveal(el){const a=el.querySelector('.reveal-area');if(a){a.classList.add('open');const b=el.querySelector('[data-reveal]');if(b)b.style.display='none';}}
-function activateSat(el,i){const s=SLIDES[parseInt(el.dataset.i,10)],c=s.cards[i];const det=el.querySelector('[data-detail]');if(det)det.innerHTML=`<div class="od-t">${svg(c.ic)} ${c.t}</div><ul>${li(c.items)}</ul>`;el.querySelectorAll('.sat').forEach(x=>x.classList.remove('active'));const sat=el.querySelector(`[data-sat="${i}"]`);if(sat){sat.classList.add('active');sat.dataset.seen="1";}}
+function slideIdx(el){return parseInt((el.closest?el.closest('.slide'):el).dataset.i,10);}
+function revealCard(c){if(c.classList.contains('revealed'))return;c.classList.add('revealed');
+ if(!isRemote){const cs=c.closest('.fgrid')?[...c.closest('.fgrid').querySelectorAll('[data-card]')]:[];const idx=cs.indexOf(c);if(idx>=0)send({t:'sync',kind:'card',i:slideIdx(c),idx});}}
+function doReveal(el){const a=el.querySelector('.reveal-area');if(a){a.classList.add('open');const b=el.querySelector('[data-reveal]');if(b)b.style.display='none';if(!isRemote)send({t:'sync',kind:'area',i:parseInt(el.dataset.i,10)});}}
+function activateSat(el,i){const s=SLIDES[parseInt(el.dataset.i,10)],c=s.cards[i];const det=el.querySelector('[data-detail]');if(det)det.innerHTML=`<div class="od-t">${svg(c.ic)} ${c.t}</div><ul>${li(c.items)}</ul>`;el.querySelectorAll('.sat').forEach(x=>x.classList.remove('active'));const sat=el.querySelector(`[data-sat="${i}"]`);if(sat){sat.classList.add('active');sat.dataset.seen="1";}
+ if(!isRemote)send({t:'sync',kind:'sat',i:parseInt(el.dataset.i,10),idx:i});}
 function revealNext(el){
  const c=el.querySelector('.fcard:not(.revealed)');if(c){revealCard(c);return;}
  const ra=el.querySelector('.reveal-area');if(ra&&!ra.classList.contains('open')){doReveal(el);return;}
@@ -500,7 +506,7 @@ function initDisplayPeer(){if(peer)return;statTxt.textContent='Initialising secu
  peer=new Peer();let opened=false;
  peer.on('open',id=>{opened=true;const url=buildRemoteURL(id);setQR(url);linkBox.textContent=url;statTxt.textContent='Waiting for your phone to connect…';
   qrHint.innerHTML=location.protocol==='file:'?'<b>⚠ This is the reason scanning fails:</b> the page is opened from a local file (file://), which a phone cannot load. Host the folder (GitHub Pages / any web server) or run the included local server, then open it by its <b>http</b> address — the QR will then connect.':'Scan with your phone camera (same Wi-Fi or mobile data both work). Peer-to-peer &amp; encrypted.';});
- peer.on('connection',c=>{conn=c;c.on('open',()=>{statDot.className='status-dot live';statTxt.textContent='Phone connected ✓ Remote is live.';toast('Phone remote connected');sendState();});c.on('data',handleRemoteCmd);c.on('close',()=>{statDot.className='status-dot waiting';statTxt.textContent='Phone disconnected — waiting…';});});
+ peer.on('connection',c=>{conn=c;c.on('open',()=>{statDot.className='status-dot live';statTxt.textContent='Phone connected ✓ Remote is live.';toast('Phone remote connected');sendState();setTimeout(closeQR,900);/* dismiss the QR so it doesn't linger on the presentation screen */});c.on('data',handleRemoteCmd);c.on('close',()=>{statDot.className='status-dot waiting';statTxt.textContent='Phone disconnected — waiting…';});});
  peer.on('error',err=>{statDot.className='status-dot err';statTxt.textContent='Link error: '+(err.type||err.message||'unknown');});
  setTimeout(()=>{if(!opened){statDot.className='status-dot err';statTxt.textContent='Signaling timeout — check your internet connection, then reopen this dialog.';}},12000);
 }
@@ -524,7 +530,11 @@ if(remoteId){
   peer=new Peer();
   peer.on('open',()=>{conn=peer.connect(remoteId,{reliable:true});
    conn.on('open',()=>{rmDot.className='status-dot live';rmStat.textContent='live';rmConnect.style.display='none';rmLive.style.display='flex';document.getElementById('rmRow2').style.display='flex';document.getElementById('rmControls').style.display='grid';conn.send({t:'req'});});
-   conn.on('data',d=>{if(d.t==='state'){rState=d;paint(d);}});
+   conn.on('data',d=>{
+     if(d.t==='state'){rState=d;paint(d);go(d.i,{broadcast:false});} /* mirror the live slide */
+     else if(d.t==='sync'){const el=slideEls[d.i];if(!el)return;if(d.kind==='card'){const cs=el.querySelectorAll('[data-card]');if(cs[d.idx])revealCard(cs[d.idx]);}else if(d.kind==='area')doReveal(el);else if(d.kind==='sat')activateSat(el,d.idx);}
+     else if(d.t==='poll'){const el=slideEls[d.i];if(el)pollAnswer(el,d.choice,false);}
+   });
    conn.on('close',()=>{rmDot.className='status-dot err';rmStat.textContent='disconnected';setTimeout(connectRemote,1500);});});
   peer.on('error',err=>{rmDot.className='status-dot err';rmStat.textContent=(err.type||'error');rmConnect.querySelector('h2').textContent='Could not connect';rmConnect.querySelector('p').textContent='Make sure the presentation screen still has the QR dialog open, then reload this page.';});}
  function paint(d){rmCounter.textContent='Slide '+String(d.i+1).padStart(2,'0')+' / '+String(d.total).padStart(2,'0');rmKicker.textContent=d.kicker||'NOW SHOWING';rmTitle.textContent=d.title;rmNext.textContent=d.next;rmNotes.textContent=d.notes||'No speaker notes for this slide.';document.getElementById('rmReveal').style.opacity=d.canReveal?'1':'.4';}
@@ -540,6 +550,11 @@ if(remoteId){
  let secs=0,running=false,tInt=null;const rmTimer=document.getElementById('rmTimer');const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
  document.getElementById('rmTimerBtn').onclick=()=>{running=!running;if(running)tInt=setInterval(()=>{secs++;rmTimer.textContent=fmt(secs);},1000);else clearInterval(tInt);};
  document.getElementById('rmTimerBtn').ondblclick=()=>{secs=0;rmTimer.textContent='00:00';};
+ /* landscape => mirror the live desktop slide; portrait => presenter console */
+ const mqLand=window.matchMedia('(orientation:landscape)');
+ function applyMirror(){const on=mqLand.matches;document.body.classList.toggle('rm-mirror',on);if(on&&rState)go(rState.i,{broadcast:false});}
+ mqLand.addEventListener?mqLand.addEventListener('change',applyMirror):mqLand.addListener(applyMirror);
+ applyMirror();
  connectRemote();
 }
 go(0,{broadcast:false});
