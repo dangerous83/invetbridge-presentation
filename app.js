@@ -275,7 +275,7 @@ function L_split(s){
  const items=s.cards.map((c,i)=>`<div class="sl-item" style="animation-delay:${.3+i*.12}s"><span class="sl-ic">${svg(c.ic)}</span><div><div class="sl-t">${c.t}</div><ul>${li(c.items)}</ul></div></div>`).join('');
  return `<div class="wrap">${head(s)}${titleHTML(s)}${leadHTML(s)}${s.alert?alertHTML(s.alert):''}
   <div class="split"><div class="split-l"><div class="split-list">${items}</div></div>
-  <div class="split-r"><svg class="mesh" data-mesh viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg></div></div></div>${FOOT}`;
+  <div class="split-r"><div class="defense-viz"><svg class="dv-svg" viewBox="0 0 120 120" data-defense preserveAspectRatio="xMidYMid meet"></svg><div class="dv-label">PERIMETER DEFENCE · ACTIVE</div></div></div></div></div>${FOOT}`;
 }
 /* ---- ORBIT ---- */
 function L_orbit(s){
@@ -382,16 +382,32 @@ function render(){
 }
 render();
 
-/* mesh builder */
-function buildMesh(el){
- const N=9,nodes=[];for(let i=0;i<N;i++)nodes.push({x:12+Math.random()*76,y:12+Math.random()*76});
- nodes[0]={x:50,y:50};let s='';
- for(let i=1;i<N;i++){const d=Math.hypot(nodes[i].x-50,nodes[i].y-50);s+=`<line class="${d<40?'mf':'ml'}" x1="50" y1="50" x2="${nodes[i].x.toFixed(1)}" y2="${nodes[i].y.toFixed(1)}"/>`;}
- for(let i=1;i<N;i++)for(let j=i+1;j<N;j++){if(Math.hypot(nodes[i].x-nodes[j].x,nodes[i].y-nodes[j].y)<26)s+=`<line class="ml" x1="${nodes[i].x.toFixed(1)}" y1="${nodes[i].y.toFixed(1)}" x2="${nodes[j].x.toFixed(1)}" y2="${nodes[j].y.toFixed(1)}"/>`;}
- nodes.forEach((n,i)=>{s+=`<circle class="mn ${i===0?'core':'pulse'}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${i===0?3.2:1.6}" style="animation-delay:${(i*0.3).toFixed(1)}s"/>`;});
- el.innerHTML=s;
+/* defence / threat-scan visual — a protected core, a rotating radar sweep,
+   scan pulses, and incoming threats that are stopped at the inner ring */
+function buildDefense(el){
+ const cx=60,cy=60,IN=24,OUT=50;
+ const angles=[-62,18,128,-150,72];           // fixed positions (deterministic, not random)
+ let threats='';
+ angles.forEach((deg,i)=>{
+  const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a),d=(i*.55).toFixed(2);
+  const xi=(cx+IN*c).toFixed(1),yi=(cy+IN*s).toFixed(1),xo=(cx+OUT*c).toFixed(1),yo=(cy+OUT*s).toFixed(1);
+  threats+=`<line class="dv-trail" x1="${xi}" y1="${yi}" x2="${xo}" y2="${yo}" style="animation-delay:${d}s"/>`+
+           `<circle class="dv-block" cx="${xi}" cy="${yi}" r="1.3" style="animation-delay:${d}s"/>`+
+           `<circle class="dv-threat" cx="${xo}" cy="${yo}" r="2.3" style="animation-delay:${d}s"/>`;
+ });
+ el.innerHTML=`
+  <circle class="dv-ring" cx="60" cy="60" r="52"/>
+  <circle class="dv-ring r2" cx="60" cy="60" r="38"/>
+  <circle class="dv-ring" cx="60" cy="60" r="24"/>
+  <line class="dv-axis" x1="60" y1="4" x2="60" y2="116"/>
+  <line class="dv-axis" x1="4" y1="60" x2="116" y2="60"/>
+  <circle class="dv-ping" cx="60" cy="60" r="24"/>
+  <g class="dv-sweep"><path class="dv-wedge" d="M60 60 L60 8 A52 52 0 0 0 27 21 Z"/><line class="dv-beam" x1="60" y1="60" x2="60" y2="8"/></g>
+  ${threats}
+  <circle class="dv-core-glow" cx="60" cy="60" r="15"/>
+  <path class="dv-shield" transform="translate(60 60) scale(.82) translate(-12 -12)" d="M12 2l8 4v6c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6z"/>`;
 }
-document.querySelectorAll('[data-mesh]').forEach(buildMesh);
+document.querySelectorAll('[data-defense]').forEach(buildDefense);
 
 /* counters / ticker / boot */
 function countUp(el){const t=parseFloat(el.dataset.count),suf=el.dataset.suffix||'';let v=0;const step=t/40;clearInterval(el._c);el._c=setInterval(()=>{v+=step;if(v>=t){v=t;clearInterval(el._c);}el.textContent=Math.round(v)+suf;},22);}
@@ -409,11 +425,14 @@ function go(i,opt){opt=opt||{};i=Math.max(0,Math.min(total-1,i));
  prevBtn.classList.toggle('disabled',i===0);nextBtn.classList.toggle('disabled',i===total-1);
  updateMenuCurrent();onEnter(slideEls[i]);if(opt.broadcast!==false)sendState();}
 function onEnter(el){el.querySelectorAll('.sv[data-count]').forEach(countUp);}
-const next=()=>go(cur+1),prev=()=>go(cur-1);
+/* on the phone, navigation drives the desktop (which mirrors back); on the desktop it moves locally */
+const next=()=>{if(isRemote){send({t:'nav',action:'next'});return;}go(cur+1);};
+const prev=()=>{if(isRemote){send({t:'nav',action:'prev'});return;}go(cur-1);};
 prevBtn.onclick=prev;nextBtn.onclick=next;
 document.getElementById('zoneL').onclick=prev;document.getElementById('zoneR').onclick=next;
 
 stage.addEventListener('click',e=>{
+ if(isRemote)return; /* phone mirrors the desktop — it doesn't drive content locally */
  const card=e.target.closest('[data-card]');if(card){revealCard(card);return;}
  const ra=e.target.closest('[data-revealall]');if(ra){slideEls[cur].querySelectorAll('.fcard:not(.revealed)').forEach((c,k)=>setTimeout(()=>revealCard(c),k*120));return;}
  const sat=e.target.closest('[data-sat]');if(sat){activateSat(slideEls[cur],parseInt(sat.dataset.sat,10));return;}
@@ -421,9 +440,12 @@ stage.addEventListener('click',e=>{
  const opt=e.target.closest('.opt');if(opt&&!opt.closest('.options').classList.contains('locked')){pollAnswer(slideEls[cur],parseInt(opt.dataset.opt,10),true);return;}
  const act=e.target.closest('[data-act]');if(act){act.dataset.act==='start'?next():openQR();}
 });
-function revealCard(c){if(c.classList.contains('revealed'))return;c.classList.add('revealed');}
-function doReveal(el){const a=el.querySelector('.reveal-area');if(a){a.classList.add('open');const b=el.querySelector('[data-reveal]');if(b)b.style.display='none';}}
-function activateSat(el,i){const s=SLIDES[parseInt(el.dataset.i,10)],c=s.cards[i];const det=el.querySelector('[data-detail]');if(det)det.innerHTML=`<div class="od-t">${svg(c.ic)} ${c.t}</div><ul>${li(c.items)}</ul>`;el.querySelectorAll('.sat').forEach(x=>x.classList.remove('active'));const sat=el.querySelector(`[data-sat="${i}"]`);if(sat){sat.classList.add('active');sat.dataset.seen="1";}}
+function slideIdx(el){return parseInt((el.closest?el.closest('.slide'):el).dataset.i,10);}
+function revealCard(c){if(c.classList.contains('revealed'))return;c.classList.add('revealed');
+ if(!isRemote){const cs=c.closest('.fgrid')?[...c.closest('.fgrid').querySelectorAll('[data-card]')]:[];const idx=cs.indexOf(c);if(idx>=0)send({t:'sync',kind:'card',i:slideIdx(c),idx});}}
+function doReveal(el){const a=el.querySelector('.reveal-area');if(a){a.classList.add('open');const b=el.querySelector('[data-reveal]');if(b)b.style.display='none';if(!isRemote)send({t:'sync',kind:'area',i:parseInt(el.dataset.i,10)});}}
+function activateSat(el,i){const s=SLIDES[parseInt(el.dataset.i,10)],c=s.cards[i];const det=el.querySelector('[data-detail]');if(det)det.innerHTML=`<div class="od-t">${svg(c.ic)} ${c.t}</div><ul>${li(c.items)}</ul>`;el.querySelectorAll('.sat').forEach(x=>x.classList.remove('active'));const sat=el.querySelector(`[data-sat="${i}"]`);if(sat){sat.classList.add('active');sat.dataset.seen="1";}
+ if(!isRemote)send({t:'sync',kind:'sat',i:parseInt(el.dataset.i,10),idx:i});}
 function revealNext(el){
  const c=el.querySelector('.fcard:not(.revealed)');if(c){revealCard(c);return;}
  const ra=el.querySelector('.reveal-area');if(ra&&!ra.classList.contains('open')){doReveal(el);return;}
@@ -484,7 +506,7 @@ function initDisplayPeer(){if(peer)return;statTxt.textContent='Initialising secu
  peer=new Peer();let opened=false;
  peer.on('open',id=>{opened=true;const url=buildRemoteURL(id);setQR(url);linkBox.textContent=url;statTxt.textContent='Waiting for your phone to connect…';
   qrHint.innerHTML=location.protocol==='file:'?'<b>⚠ This is the reason scanning fails:</b> the page is opened from a local file (file://), which a phone cannot load. Host the folder (GitHub Pages / any web server) or run the included local server, then open it by its <b>http</b> address — the QR will then connect.':'Scan with your phone camera (same Wi-Fi or mobile data both work). Peer-to-peer &amp; encrypted.';});
- peer.on('connection',c=>{conn=c;c.on('open',()=>{statDot.className='status-dot live';statTxt.textContent='Phone connected ✓ Remote is live.';toast('Phone remote connected');sendState();});c.on('data',handleRemoteCmd);c.on('close',()=>{statDot.className='status-dot waiting';statTxt.textContent='Phone disconnected — waiting…';});});
+ peer.on('connection',c=>{conn=c;c.on('open',()=>{statDot.className='status-dot live';statTxt.textContent='Phone connected ✓ Remote is live.';toast('Phone remote connected');sendState();setTimeout(closeQR,900);/* dismiss the QR so it doesn't linger on the presentation screen */});c.on('data',handleRemoteCmd);c.on('close',()=>{statDot.className='status-dot waiting';statTxt.textContent='Phone disconnected — waiting…';});});
  peer.on('error',err=>{statDot.className='status-dot err';statTxt.textContent='Link error: '+(err.type||err.message||'unknown');});
  setTimeout(()=>{if(!opened){statDot.className='status-dot err';statTxt.textContent='Signaling timeout — check your internet connection, then reopen this dialog.';}},12000);
 }
@@ -508,7 +530,11 @@ if(remoteId){
   peer=new Peer();
   peer.on('open',()=>{conn=peer.connect(remoteId,{reliable:true});
    conn.on('open',()=>{rmDot.className='status-dot live';rmStat.textContent='live';rmConnect.style.display='none';rmLive.style.display='flex';document.getElementById('rmRow2').style.display='flex';document.getElementById('rmControls').style.display='grid';conn.send({t:'req'});});
-   conn.on('data',d=>{if(d.t==='state'){rState=d;paint(d);}});
+   conn.on('data',d=>{
+     if(d.t==='state'){rState=d;paint(d);go(d.i,{broadcast:false});} /* mirror the live slide */
+     else if(d.t==='sync'){const el=slideEls[d.i];if(!el)return;if(d.kind==='card'){const cs=el.querySelectorAll('[data-card]');if(cs[d.idx])revealCard(cs[d.idx]);}else if(d.kind==='area')doReveal(el);else if(d.kind==='sat')activateSat(el,d.idx);}
+     else if(d.t==='poll'){const el=slideEls[d.i];if(el)pollAnswer(el,d.choice,false);}
+   });
    conn.on('close',()=>{rmDot.className='status-dot err';rmStat.textContent='disconnected';setTimeout(connectRemote,1500);});});
   peer.on('error',err=>{rmDot.className='status-dot err';rmStat.textContent=(err.type||'error');rmConnect.querySelector('h2').textContent='Could not connect';rmConnect.querySelector('p').textContent='Make sure the presentation screen still has the QR dialog open, then reload this page.';});}
  function paint(d){rmCounter.textContent='Slide '+String(d.i+1).padStart(2,'0')+' / '+String(d.total).padStart(2,'0');rmKicker.textContent=d.kicker||'NOW SHOWING';rmTitle.textContent=d.title;rmNext.textContent=d.next;rmNotes.textContent=d.notes||'No speaker notes for this slide.';document.getElementById('rmReveal').style.opacity=d.canReveal?'1':'.4';}
@@ -524,6 +550,11 @@ if(remoteId){
  let secs=0,running=false,tInt=null;const rmTimer=document.getElementById('rmTimer');const fmt=s=>String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
  document.getElementById('rmTimerBtn').onclick=()=>{running=!running;if(running)tInt=setInterval(()=>{secs++;rmTimer.textContent=fmt(secs);},1000);else clearInterval(tInt);};
  document.getElementById('rmTimerBtn').ondblclick=()=>{secs=0;rmTimer.textContent='00:00';};
+ /* landscape => mirror the live desktop slide; portrait => presenter console */
+ const mqLand=window.matchMedia('(orientation:landscape)');
+ function applyMirror(){const on=mqLand.matches;document.body.classList.toggle('rm-mirror',on);if(on&&rState)go(rState.i,{broadcast:false});}
+ mqLand.addEventListener?mqLand.addEventListener('change',applyMirror):mqLand.addListener(applyMirror);
+ applyMirror();
  connectRemote();
 }
 go(0,{broadcast:false});
