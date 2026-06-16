@@ -28,6 +28,23 @@ const A="asset/ITSEC Horizontal White.png";
 const SLIDES=[
 {type:"cover",section:"Welcome",notes:"Welcome. I'm Amir Kolahzadeh, Founder & CEO of ITSEC. This is a business-risk session for everyone who uses email, handles client data or joins Teams — not IT-only. By the end, every person should know how to spot threats, respond correctly, and avoid becoming the entry point for a breach. Press → to begin."},
 
+{type:"content",layout:"dashboard",section:"Your Platform",kicker:"YOUR PLATFORM · CYBERSHIELD",modid:"PLATFORM",
+ title:"Your CyberShield Dashboard",
+ lead:"Everything in this briefing lives in one place — <b>CyberShield</b>. Complete training, earn badges and acknowledge every required policy. <b>“You're all caught up”</b> is the target for everyone at Investbridge Capital.",
+ dash:{
+  progress:{pct:"0%",val:0,label:"Complete",sub:"0 of 0 modules completed"},
+  status:[["Completed","0","check"],["In Progress","0","eye"],["Not Started","0","file"]],
+  leaderboard:"Complete modules to earn points and climb the leaderboard.",
+  badges:[["First Module","check"],["Quick Learner","brain"],["Security Champion","shield"],["Perfect Score","key"]],
+  compliance:{pct:"0%",val:0,done:"0 of 4 completed",pending:"4 Pending"},
+  policies:[
+   {cat:"General",t:"Security Governance & Board Oversight Policy",v:"v1.0",upd:"4/8/2026"},
+   {cat:"IT Security",t:"Information Security Policy",v:"v3.0",upd:"3/27/2026"},
+   {cat:"Physical Security",t:"Clean Desk Policy",v:"v1.2",upd:"3/27/2026"},
+   {cat:"IT Security",t:"Cloud Services Usage Policy",v:"v1.0",upd:"4/8/2026"}]
+ },
+ notes:"This is the platform that delivers and tracks everything we cover today. Each employee gets a dashboard: training progress (Completed / In-Progress / Not-Started), badges (First Module, Quick Learner, Security Champion, Perfect Score) and a leaderboard to keep it engaging. The four required policies — Security Governance & Board Oversight (v1.0), Information Security (v3.0), Clean Desk (v1.2) and Cloud Services Usage (v1.0) — must each be reviewed and signed; right now compliance is 0 of 4. The goal is simple: every dashboard at 100% and 'You're all caught up.' Compliance is measurable and auditable — exactly what the DFSA expects."},
+
 {type:"content",layout:"orbit",section:"Context & Regulation",kicker:"01 // Threat Posture",modid:"MOD-01",
  title:"Cybersecurity Is Now a Board-Level Risk",core:"TARGET:<br>YOUR FIRM",
  lead:"Financial firms are high-value targets because they hold trust, money, client data and market-sensitive information. <b>Tap a node</b> to see what attackers are really after.",
@@ -329,7 +346,37 @@ function L_spotlight(s){
   <div class="spotlight"><div class="spot-hero"><div class="spot-tag">${hero.tag}</div><div class="spot-txt">${hero.txt}</div></div>
   <div class="spot-tiles" style="--n:${s.cards.length}">${tiles}</div></div></div>${FOOT}`;
 }
-const LAYOUTS={matrix:L_matrix,split:L_split,orbit:L_orbit,steps:L_steps,compare:L_compare,pillars:L_pillars,console:L_console,spotlight:L_spotlight};
+/* ---- DASHBOARD (faithful CyberShield mock) ---- */
+function L_dashboard(s){
+ const d=s.dash;
+ const status=d.status.map(r=>`<div class="db-row"><span class="db-row-l">${svg(r[2])}${r[0]}</span><span class="db-pill">${r[1]}</span></div>`).join('');
+ const badges=d.badges.map(b=>`<div class="db-badge"><span class="bi">${svg(b[1])}</span><span>${b[0]}</span></div>`).join('');
+ const pols=d.policies.map(p=>`<div class="db-pol"><div class="db-pol-top"><span class="db-cat">${svg('lock')}${p.cat}</span><span class="db-ver">${p.v}</span></div>
+   <div class="db-pt">${p.t}</div>
+   <div class="db-pol-meta"><span>Updated ${p.upd}</span><span class="db-status">${svg('alert')}Pending</span></div>
+   <div class="db-sign">${svg('eye')} Review &amp; Sign</div></div>`).join('');
+ return `<div class="wrap">${head(s)}${titleHTML(s)}${leadHTML(s)}
+  <div class="dashboard">
+   <div class="db-welcome"><div class="wl-t">Welcome back, Alvin. <b>You're all caught up!</b></div><span class="db-cta">${svg('file')} Continue Training</span></div>
+   <div class="db-grid">
+    <div class="db-col">
+     <div class="db-stats">
+      <div class="db-panel db-stat"><div class="db-ring" style="--p:${d.progress.val}"><span>${d.progress.pct}</span></div><div class="db-sub">${d.progress.label} · ${d.progress.sub}</div></div>
+      <div class="db-panel db-stat db-statlist"><h4>Training Status</h4>${status}</div>
+     </div>
+     <div class="db-panel db-lead"><h4>${svg('money')} Leaderboard</h4><p>${d.leaderboard}</p></div>
+     <div class="db-panel db-badgewrap"><h4>${svg('check')} Badges &amp; Certifications</h4><div class="db-badges">${badges}</div></div>
+    </div>
+    <div class="db-panel db-policies">
+     <div class="db-pol-head"><h4>${svg('shield')} Your Organization — Policies</h4><span class="db-pending">${svg('alert')} ${d.compliance.pending}</span></div>
+     <div class="db-compliance"><div class="db-comp-top"><span>Compliance Progress · ${d.compliance.pct}</span><span>${d.compliance.done}</span></div><div class="db-bar"><i style="width:${d.compliance.val}%"></i></div></div>
+     <div class="db-reqs">Requires your acknowledgement</div>
+     <div class="db-pols">${pols}</div>
+    </div>
+   </div>
+  </div></div>${FOOT}`;
+}
+const LAYOUTS={matrix:L_matrix,split:L_split,orbit:L_orbit,steps:L_steps,compare:L_compare,pillars:L_pillars,console:L_console,spotlight:L_spotlight,dashboard:L_dashboard};
 
 function render(){
  SLIDES.forEach((s,idx)=>{
