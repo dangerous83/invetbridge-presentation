@@ -38,10 +38,28 @@ const SLIDES=[
   badges:[["First Module","check"],["Quick Learner","brain"],["Security Champion","shield"],["Perfect Score","key"]],
   compliance:{pct:"0%",val:0,done:"0 of 4 completed",pending:"4 Pending"},
   policies:[
-   {cat:"General",t:"Security Governance & Board Oversight Policy",v:"v1.0",upd:"4/8/2026"},
-   {cat:"IT Security",t:"Information Security Policy",v:"v3.0",upd:"3/27/2026"},
-   {cat:"Physical Security",t:"Clean Desk Policy",v:"v1.2",upd:"3/27/2026"},
-   {cat:"IT Security",t:"Cloud Services Usage Policy",v:"v1.0",upd:"4/8/2026"}]
+   {cat:"General",t:"Security Governance & Board Oversight Policy",v:"v1.0",upd:"4/8/2026",signed:"0/78",
+    body:[
+     {h:"1. Purpose",p:"This policy establishes the governance framework for information security at the executive and board level, in compliance with DESC ISR v3.1 Domain 1 (Security Governance)."},
+     {h:"2. Scope",p:"This policy applies to:",list:["Board of Directors and Executive Committee members","Chief Information Security Officer (CISO)","All C-suite executives and department heads","IT Security leadership","All employees with security oversight responsibilities"]},
+     {h:"3. Board-Level Security Oversight (ISR 1.1)",p:"3.1. The Board of Directors shall maintain formal oversight of the organisation's information security posture. 3.2. A dedicated Board Security Committee (or equivalent) shall convene quarterly to review:",list:["Security risk assessment reports","Incident trends and response effectiveness","Compliance status with DESC ISR and other applicable regulations","Security investment and resource allocation"],p2:"3.3. Board members shall receive annual cybersecurity awareness briefings."},
+     {h:"4. Security Strategy Documentation (ISR 1.2)",p:"4.1. The CISO shall maintain a documented Information Security Strategy aligned with business objectives. 4.2. The strategy shall be reviewed and formally approved by the Board annually. 4.3. The strategy shall address:",list:["Risk appetite and tolerance levels","Security architecture and technology roadmap","Workforce security culture development","Third-party and supply chain security","Incident response and business continuity"]},
+     {h:"5. Security Culture Program (ISR 1.3)",p:"5.1. The organisation shall establish a measurable security culture program. 5.2. Security awareness metrics (training completion, phishing resilience, policy compliance) shall be reported to the Board quarterly. 5.3. Executive leadership shall actively champion security awareness initiatives."},
+     {h:"6. CISO Mandate",p:"6.1. The CISO shall have direct reporting access to the Board or CEO. 6.2. The CISO is responsible for:",list:["Developing and maintaining the security strategy","Overseeing security operations and incident response","Ensuring regulatory compliance (DESC ISR, NESA, UAE IA)","Reporting security posture to the Board"]},
+     {h:"7. Sign-off Requirements",p:"This policy requires formal acknowledgement."}]},
+   {cat:"IT Security",t:"Information Security Policy",v:"v3.0",upd:"3/27/2026",signed:"0/78",
+    body:[
+     {h:"1. Purpose",p:"Establish the framework for information security management across the organization."},
+     {h:"2. Scope",p:"All employees and contractors."},
+     {h:"3. Policy",p:"All information assets must be protected according to their classification level. Security controls must be implemented proportional to risk."}]},
+   {cat:"Physical Security",t:"Clean Desk Policy",v:"v1.2",upd:"3/27/2026",signed:"0/78",
+    body:[
+     {h:"1. Purpose",p:"Prevent unauthorized access to sensitive information left on desks and screens."},
+     {h:"2. Requirements",p:"Lock screens when away. Secure documents in drawers. Shred sensitive papers. No sticky notes with passwords."}]},
+   {cat:"IT Security",t:"Cloud Services Usage Policy",v:"v1.0",upd:"4/8/2026",signed:"0/78",
+    body:[
+     {h:"1. Approved Services",p:"Only IT-approved cloud services may be used for business data. Shadow IT is prohibited."},
+     {h:"2. Data Storage",p:"Sensitive data must only reside in approved cloud regions with encryption enabled."}]}]
  },
  notes:"This is the platform that delivers and tracks everything we cover today. Each employee gets a dashboard: training progress (Completed / In-Progress / Not-Started), badges (First Module, Quick Learner, Security Champion, Perfect Score) and a leaderboard to keep it engaging. The four required policies — Security Governance & Board Oversight (v1.0), Information Security (v3.0), Clean Desk (v1.2) and Cloud Services Usage (v1.0) — must each be reviewed and signed; right now compliance is 0 of 4. The goal is simple: every dashboard at 100% and 'You're all caught up.' Compliance is measurable and auditable — exactly what the DFSA expects."},
 
@@ -351,10 +369,10 @@ function L_dashboard(s){
  const d=s.dash;
  const status=d.status.map(r=>`<div class="db-row"><span class="db-row-l">${svg(r[2])}${r[0]}</span><span class="db-pill">${r[1]}</span></div>`).join('');
  const badges=d.badges.map(b=>`<div class="db-badge"><span class="bi">${svg(b[1])}</span><span>${b[0]}</span></div>`).join('');
- const pols=d.policies.map(p=>`<div class="db-pol"><div class="db-pol-top"><span class="db-cat">${svg('lock')}${p.cat}</span><span class="db-ver">${p.v}</span></div>
+ const pols=d.policies.map((p,i)=>`<div class="db-pol" data-polcard="${i}"><div class="db-pol-top"><span class="db-cat">${svg('lock')}${p.cat}</span><span class="db-ver">${p.v}</span></div>
    <div class="db-pt">${p.t}</div>
-   <div class="db-pol-meta"><span>Updated ${p.upd}</span><span class="db-status">${svg('alert')}Pending</span></div>
-   <div class="db-sign">${svg('eye')} Review &amp; Sign</div></div>`).join('');
+   <div class="db-pol-meta"><span>Updated ${p.upd}</span><span class="db-status" data-polstatus>${svg('alert')}Pending</span></div>
+   <button class="db-sign" data-sign="${i}">${svg('eye')} Review &amp; Sign</button></div>`).join('');
  return `<div class="wrap">${head(s)}${titleHTML(s)}${leadHTML(s)}
   <div class="dashboard">
    <div class="db-welcome"><div class="wl-t">Welcome back, Alvin. <b>You're all caught up!</b></div><span class="db-cta">${svg('file')} Continue Training</span></div>
@@ -368,8 +386,8 @@ function L_dashboard(s){
      <div class="db-panel db-badgewrap"><h4>${svg('check')} Badges &amp; Certifications</h4><div class="db-badges">${badges}</div></div>
     </div>
     <div class="db-panel db-policies">
-     <div class="db-pol-head"><h4>${svg('shield')} Your Organization — Policies</h4><span class="db-pending">${svg('alert')} ${d.compliance.pending}</span></div>
-     <div class="db-compliance"><div class="db-comp-top"><span>Compliance Progress · ${d.compliance.pct}</span><span>${d.compliance.done}</span></div><div class="db-bar"><i style="width:${d.compliance.val}%"></i></div></div>
+     <div class="db-pol-head"><h4>${svg('shield')} Your Organization — Policies</h4><span class="db-pending" data-db-pending>${svg('alert')} ${d.compliance.pending}</span></div>
+     <div class="db-compliance"><div class="db-comp-top"><span>Compliance Progress · <b data-db-pct>${d.compliance.pct}</b></span><span data-db-done>${d.compliance.done}</span></div><div class="db-bar"><i data-db-bar style="width:${d.compliance.val}%"></i></div></div>
      <div class="db-reqs">Requires your acknowledgement</div>
      <div class="db-pols">${pols}</div>
     </div>
@@ -483,10 +501,54 @@ stage.addEventListener('click',e=>{
  const card=e.target.closest('[data-card]');if(card){revealCard(card);return;}
  const ra=e.target.closest('[data-revealall]');if(ra){slideEls[cur].querySelectorAll('.fcard:not(.revealed)').forEach((c,k)=>setTimeout(()=>revealCard(c),k*120));return;}
  const sat=e.target.closest('[data-sat]');if(sat){activateSat(slideEls[cur],parseInt(sat.dataset.sat,10));return;}
+ const sign=e.target.closest('[data-sign]');if(sign){openPolicy(parseInt(sign.dataset.sign,10));return;}
  const rev=e.target.closest('[data-reveal]');if(rev){doReveal(slideEls[cur]);return;}
  const opt=e.target.closest('.opt');if(opt&&!opt.closest('.options').classList.contains('locked')){pollAnswer(slideEls[cur],parseInt(opt.dataset.opt,10),true);return;}
  const act=e.target.closest('[data-act]');if(act){act.dataset.act==='start'?next():openQR();}
 });
+
+/* ============ POLICY REVIEW & SIGN (interactive) ============ */
+const DASH_I=SLIDES.findIndex(s=>s&&s.layout==='dashboard');
+const polAck=[];let curPol=-1;
+const bumpSigned=s=>{const a=String(s).split('/');return (parseInt(a[0],10)+1)+'/'+a[1];};
+function polBodyHTML(p){return (p.body||[]).map(sec=>`<div class="pm-sec"><h4>${sec.h}</h4>${sec.p?`<p>${sec.p}</p>`:''}${sec.list?`<ul>${li(sec.list)}</ul>`:''}${sec.p2?`<p>${sec.p2}</p>`:''}</div>`).join('');}
+function openPolicy(i){if(DASH_I<0)return;const p=SLIDES[DASH_I].dash.policies[i];if(!p)return;curPol=i;
+ const acked=!!polAck[i],ver=p.v.replace('v','');
+ const $=id=>document.getElementById(id);
+ $('pmTitle').textContent=p.t;
+ $('pmSub').textContent=`Version ${ver} · ${p.cat} · Last updated ${p.upd}`;
+ $('pmBadges').innerHTML=`<span class="pm-badge">${svg('file')} ${p.v}</span><span class="pm-badge">${svg('user')} ${(acked?bumpSigned(p.signed):p.signed)} signed</span><span class="pm-badge">${svg('bell')} ${p.upd}</span><span class="pm-chip${acked?' done':''}">${acked?'Acknowledged ✓':'0% Complete'}</span>`;
+ $('pmBody').innerHTML=polBodyHTML(p);$('pmBody').scrollTop=0;
+ const ts=new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';
+ $('pmTs').textContent=`Timestamp: ${ts} · Policy Version: ${ver}`;
+ $('pmUpName').textContent='';
+ const acc=$('pmAccept');
+ if(acked){acc.classList.add('done');acc.innerHTML=`${svg('check')} Acknowledged`;}
+ else{acc.classList.remove('done');acc.innerHTML=`${svg('check')} I Acknowledge & Accept`;}
+ $('policyModal').classList.add('open');
+}
+function closePolicy(){const m=document.getElementById('policyModal');if(m)m.classList.remove('open');}
+function acceptPolicy(){if(curPol<0||polAck[curPol])return;applyPolicyAck(curPol,true);toast('Policy acknowledged & signed ✓');closePolicy();}
+function applyPolicyAck(i,broadcast){if(DASH_I<0||polAck[i])return;polAck[i]=true;
+ const slide=slideEls[DASH_I];
+ if(slide){const card=slide.querySelector(`[data-polcard="${i}"]`);
+  if(card){card.classList.add('signed');const st=card.querySelector('[data-polstatus]');if(st)st.innerHTML=`${svg('check')}Acknowledged`;const btn=card.querySelector('[data-sign]');if(btn)btn.innerHTML=`${svg('check')} Acknowledged`;}
+  refreshCompliance(slide);}
+ if(broadcast&&!isRemote)send({t:'sync',kind:'policy',i:DASH_I,idx:i});
+}
+function refreshCompliance(slide){const total=SLIDES[DASH_I].dash.policies.length,done=polAck.filter(Boolean).length,pct=Math.round(done/total*100);
+ const t=(sel,v)=>{const el=slide.querySelector(sel);if(el)el.textContent=v;};
+ t('[data-db-pct]',pct+'%');t('[data-db-done]',`${done} of ${total} completed`);
+ const bar=slide.querySelector('[data-db-bar]');if(bar)bar.style.width=pct+'%';
+ const pend=slide.querySelector('[data-db-pending]');if(pend){pend.innerHTML=done===total?`${svg('check')} All signed`:`${svg('alert')} ${total-done} Pending`;pend.classList.toggle('done',done===total);}
+}
+(function wirePolicyModal(){const m=document.getElementById('policyModal');if(!m)return;
+ document.getElementById('pmClose').onclick=closePolicy;
+ document.getElementById('pmCancel').onclick=closePolicy;
+ document.getElementById('pmAccept').onclick=acceptPolicy;
+ document.getElementById('pmUpload').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];document.getElementById('pmUpName').textContent=f?('Attached: '+f.name):'';});
+ m.addEventListener('click',e=>{if(e.target===m)closePolicy();});
+})();
 function slideIdx(el){return parseInt((el.closest?el.closest('.slide'):el).dataset.i,10);}
 function revealCard(c){if(c.classList.contains('revealed'))return;c.classList.add('revealed');
  if(!isRemote){const cs=c.closest('.fgrid')?[...c.closest('.fgrid').querySelectorAll('[data-card]')]:[];const idx=cs.indexOf(c);if(idx>=0)send({t:'sync',kind:'card',i:slideIdx(c),idx});}}
@@ -508,7 +570,7 @@ window.addEventListener('keydown',e=>{if(isRemote)return;
  else if(e.key.toLowerCase()==='f')toggleFS();
  else if(e.key.toLowerCase()==='z')cycleZoom();
  else if(e.key.toLowerCase()==='m')toggleDrawer();
- else if(e.key==='Escape'){closeDrawer();closeQR();}});
+ else if(e.key==='Escape'){closeDrawer();closeQR();closePolicy();}});
 let tx=0;stage.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});
 stage.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60)dx<0?next():prev();},{passive:true});
 function toggleFS(){if(!document.fullscreenElement)document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();else document.exitFullscreen&&document.exitFullscreen();}
@@ -579,7 +641,7 @@ if(remoteId){
    conn.on('open',()=>{rmDot.className='status-dot live';rmStat.textContent='live';rmConnect.style.display='none';rmLive.style.display='flex';document.getElementById('rmRow2').style.display='flex';document.getElementById('rmControls').style.display='grid';conn.send({t:'req'});});
    conn.on('data',d=>{
      if(d.t==='state'){rState=d;paint(d);go(d.i,{broadcast:false});} /* mirror the live slide */
-     else if(d.t==='sync'){const el=slideEls[d.i];if(!el)return;if(d.kind==='card'){const cs=el.querySelectorAll('[data-card]');if(cs[d.idx])revealCard(cs[d.idx]);}else if(d.kind==='area')doReveal(el);else if(d.kind==='sat')activateSat(el,d.idx);}
+     else if(d.t==='sync'){const el=slideEls[d.i];if(!el)return;if(d.kind==='card'){const cs=el.querySelectorAll('[data-card]');if(cs[d.idx])revealCard(cs[d.idx]);}else if(d.kind==='area')doReveal(el);else if(d.kind==='sat')activateSat(el,d.idx);else if(d.kind==='policy')applyPolicyAck(d.idx,false);}
      else if(d.t==='poll'){const el=slideEls[d.i];if(el)pollAnswer(el,d.choice,false);}
    });
    conn.on('close',()=>{rmDot.className='status-dot err';rmStat.textContent='disconnected';setTimeout(connectRemote,1500);});});
