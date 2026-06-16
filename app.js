@@ -383,7 +383,7 @@ function render(){
   const el=document.createElement('section');el.className='slide '+s.type;el.dataset.i=idx;let h='';
   if(s.type==='cover'){el.classList.add('cover');
    h=`<div class="radar"></div><div class="cover-inner">
-    <div class="cover-logos"><img src="${A}" class="ic" alt="ITSEC"/><span class="vline"></span><img src="asset/IC-logo-print-london-dubai.png" alt="Investbridge Capital" style="background:#fff;border-radius:8px;padding:6px 10px;height:54px"/></div>
+    <div class="cover-logos"><img src="${A}" class="ic" alt="ITSEC"/><span class="vline"></span><img src="asset/IC-logo-print-london-dubai-transparent.png" alt="Investbridge Capital" style="height:54px"/></div>
     <div class="boot mono" id="bootSeq"></div>
     <h1><span class="l1">Cyber Defence Briefing</span><span class="hl">for Financial Services</span></h1>
     <p class="sub">A DFSA-aligned security awareness session for everyone at <b style="color:#fff">Investbridge Capital</b> — protecting clients, data, reputation &amp; regulatory trust.</p>
@@ -421,7 +421,7 @@ function render(){
    h=`<div class="wrap" style="text-align:center"><span class="kicker" style="justify-content:center;margin-bottom:14px">${s.kicker}</span>
     <h2 class="title" style="font-size:clamp(52px,10vw,130px)">${s.title}</h2><p class="lead" style="margin:0 auto 28px">${s.lead}</p>
     <div style="max-width:760px;margin:0 auto;text-align:left"><ul style="list-style:none;display:flex;flex-direction:column;gap:11px">${s.prompts.map(p=>`<li style="display:flex;gap:12px;align-items:flex-start;font-size:17px"><span class="mk" style="margin-top:8px;width:8px;height:8px"></span><span>${p}</span></li>`).join('')}</ul></div>
-    <div class="cover-logos" style="justify-content:center;margin-top:44px;animation:none;opacity:.9"><img src="${A}" class="ic" alt="ITSEC"/><span class="vline"></span><img src="asset/IC-logo-print-london-dubai.png" alt="Investbridge" style="background:#fff;border-radius:8px;padding:6px 10px;height:50px"/></div>
+    <div class="cover-logos" style="justify-content:center;margin-top:44px;animation:none;opacity:.9"><img src="${A}" class="ic" alt="ITSEC"/><span class="vline"></span><img src="asset/IC-logo-print-london-dubai-transparent.png" alt="Investbridge" style="height:50px"/></div>
     <p class="ft-txt mono" style="margin-top:18px;letter-spacing:.14em;color:var(--txt-dim)">THANK YOU · ITSEC.COM · PAUSE · VERIFY · ESCALATE</p></div>`;
   }
   el.innerHTML=h;stage.appendChild(el);
