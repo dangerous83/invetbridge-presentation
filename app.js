@@ -39,6 +39,7 @@ const SLIDES=[
   compliance:{pct:"0%",val:0,done:"0 of 4 completed",pending:"4 Pending"},
   policies:[
    {cat:"General",t:"Security Governance & Board Oversight Policy",v:"v1.0",upd:"4/8/2026",signed:"0/78",
+    ex:"# Security Governance & Board Oversight Policy ## 1. Purpose This policy establishes the governance framework for information security at the executive and boar…",
     body:[
      {h:"1. Purpose",p:"This policy establishes the governance framework for information security at the executive and board level, in compliance with DESC ISR v3.1 Domain 1 (Security Governance)."},
      {h:"2. Scope",p:"This policy applies to:",list:["Board of Directors and Executive Committee members","Chief Information Security Officer (CISO)","All C-suite executives and department heads","IT Security leadership","All employees with security oversight responsibilities"]},
@@ -48,15 +49,18 @@ const SLIDES=[
      {h:"6. CISO Mandate",p:"6.1. The CISO shall have direct reporting access to the Board or CEO. 6.2. The CISO is responsible for:",list:["Developing and maintaining the security strategy","Overseeing security operations and incident response","Ensuring regulatory compliance (DESC ISR, NESA, UAE IA)","Reporting security posture to the Board"]},
      {h:"7. Sign-off Requirements",p:"This policy requires formal acknowledgement."}]},
    {cat:"IT Security",t:"Information Security Policy",v:"v3.0",upd:"3/27/2026",signed:"0/78",
+    ex:"1. Purpose Establish the framework for information security management across the organization. 2. Scope All employees and contractors. 3. Policy All informatio…",
     body:[
      {h:"1. Purpose",p:"Establish the framework for information security management across the organization."},
      {h:"2. Scope",p:"All employees and contractors."},
      {h:"3. Policy",p:"All information assets must be protected according to their classification level. Security controls must be implemented proportional to risk."}]},
    {cat:"Physical Security",t:"Clean Desk Policy",v:"v1.2",upd:"3/27/2026",signed:"0/78",
+    ex:"1. Purpose Prevent unauthorized access to sensitive information left on desks and screens. 2. Requirements Lock screens when away. Secure documents in drawers. …",
     body:[
      {h:"1. Purpose",p:"Prevent unauthorized access to sensitive information left on desks and screens."},
      {h:"2. Requirements",p:"Lock screens when away. Secure documents in drawers. Shred sensitive papers. No sticky notes with passwords."}]},
    {cat:"IT Security",t:"Cloud Services Usage Policy",v:"v1.0",upd:"4/8/2026",signed:"0/78",
+    ex:"1. Approved Services Only IT-approved cloud services may be used for business data. Shadow IT is prohibited. 2. Data Storage Sensitive data must only reside in …",
     body:[
      {h:"1. Approved Services",p:"Only IT-approved cloud services may be used for business data. Shadow IT is prohibited."},
      {h:"2. Data Storage",p:"Sensitive data must only reside in approved cloud regions with encryption enabled."}]}]
@@ -371,6 +375,7 @@ function L_dashboard(s){
  const badges=d.badges.map(b=>`<div class="db-badge"><span class="bi">${svg(b[1])}</span><span>${b[0]}</span></div>`).join('');
  const pols=d.policies.map((p,i)=>`<div class="db-pol" data-polcard="${i}"><div class="db-pol-top"><span class="db-cat">${svg('lock')}${p.cat}</span><span class="db-ver">${p.v}</span></div>
    <div class="db-pt">${p.t}</div>
+   ${p.ex?`<div class="db-pol-ex">${p.ex}</div>`:''}
    <div class="db-pol-meta"><span>Updated ${p.upd}</span><span class="db-status" data-polstatus>${svg('alert')}Pending</span></div>
    <button class="db-sign" data-sign="${i}">${svg('eye')} Review &amp; Sign</button></div>`).join('');
  return `<div class="wrap">${head(s)}${titleHTML(s)}${leadHTML(s)}
